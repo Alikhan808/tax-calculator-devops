@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: tax-calculator-pipeline
@@ -9,8 +9,9 @@ spec:
     - name: branch
       type: string
       default: main
-    - name: build-image
+    - name: app-name
       type: string
+      default: tax-calculator
   workspaces:
     - name: pipeline-workspace
     - name: dockerconfig-ws
@@ -49,7 +50,7 @@ spec:
         name: buildah
       params:
         - name: IMAGE
-          value: $(params.build-image)
+          value: us.icr.io/$(context.pipelineRun.namespace)/$(params.app-name)
       workspaces:
         - name: source
           workspace: pipeline-workspace

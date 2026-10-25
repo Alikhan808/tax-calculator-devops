@@ -1,8 +1,9 @@
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: tax-calculator-run-
 spec:
+  serviceAccountName: pipeline
   pipelineRef:
     name: tax-calculator-pipeline
   params:
@@ -10,8 +11,8 @@ spec:
       value: https://github.com/Alikhan808/tax-calculator-devops.git
     - name: branch
       value: main
-    - name: build-image
-      value: us.icr.io/REPLACE_WITH_LAB_REGISTRY_NAMESPACE/tax-calculator:pipeline
+    - name: app-name
+      value: tax-calculator
   workspaces:
     - name: pipeline-workspace
       volumeClaimTemplate:
@@ -22,6 +23,6 @@ spec:
               storage: 1Gi
     - name: dockerconfig-ws
       secret:
-        secretName: icr-secret
+        secretName: docker-reg-creds
   timeouts:
     pipeline: 30m0s

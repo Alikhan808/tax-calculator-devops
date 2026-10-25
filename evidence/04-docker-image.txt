@@ -1,0 +1,4 @@
+$ docker ps --filter name=tax-calculator
+CONTAINER ID   IMAGE                   COMMAND                  CREATED                  STATUS                  PORTS                                     NAMES
+7a7ced5c755f   tax-calculator:latest   "/docker-entrypoint.…"   Less than a second ago   Up Less than a second   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   tax-calculator
+HTTP checks passed: index.html and taxCalculator.js served by the Docker container.

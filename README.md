@@ -31,7 +31,7 @@ The Dockerfile begins with FROM nginx and copies the five required files. GitHub
 - [pipeline.yaml](pipeline.yaml): clone → npminstall → tests → build; returns the registry image digest.
 - [run.yaml](run.yaml): PipelineRun parameters and workspace bindings.
 
-Requires Tekton Pipelines with the stable tekton.dev/v1 API, a default storage class, and a Docker registry Secret named icr-secret. Buildah requires a lab service account permitted to execute privileged builds. This project does not grant cluster permissions. Replace REPLACE_WITH_LAB_REGISTRY_NAMESPACE in run.yaml with the assigned registry namespace.
+Uses tekton.dev/v1beta1 to match the course lab. Requires a default storage class, the lab's pipeline service account, and the Docker registry Secret docker-reg-creds described in the course. Buildah requires the lab's permitted privileged-build service account. This project does not grant cluster permissions. The destination image is us.icr.io/<PipelineRun namespace>/tax-calculator, so run the pipeline in the namespace assigned by the IBM lab. Code Engine uses its separate registry secret, icr-secret.
 
 ```sh
 kubectl apply -f tasks.yaml -f pipeline.yaml

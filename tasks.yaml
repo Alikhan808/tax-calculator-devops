@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: clone
@@ -26,7 +26,7 @@ spec:
         git clone --depth 1 --branch "$REVISION" "$REPO_URL" repo
         git -C repo rev-parse HEAD
 ---
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: npm
@@ -46,7 +46,7 @@ spec:
         set -eu
         npm ci --no-audit --no-fund
 ---
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: jasmine
@@ -63,7 +63,7 @@ spec:
         set -eu
         npx --no-install jasmine
 ---
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: buildah
