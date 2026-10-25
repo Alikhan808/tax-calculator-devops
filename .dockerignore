@@ -1,0 +1,9 @@
+.git
+.github
+node_modules
+spec
+evidence
+*.zip
+.env*
+scripts
+docs

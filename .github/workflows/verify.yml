@@ -1,0 +1,56 @@
+name: Verify Jasmine and Docker
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Seven Jasmine specifications
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          printf '$ npx jasmine\n' > evidence/01-jasmine-tests-passing.txt
+          npx jasmine --no-color 2>&1 | tee -a evidence/01-jasmine-tests-passing.txt
+      - name: Capture Dockerfile
+        run: cp Dockerfile evidence/02-dockerfile.txt
+      - name: Build Docker image
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '$ docker build -t tax-calculator:latest .\n' > evidence/03-docker-build-output.txt
+          docker build --progress=plain -t tax-calculator:latest . 2>&1 | tee -a evidence/03-docker-build-output.txt
+      - name: Run container on port 8080 and verify HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name tax-calculator -p 8080:80 tax-calculator:latest
+          printf '$ docker ps\n' > evidence/04-docker-image.txt
+          docker ps --filter name=tax-calculator 2>&1 | tee -a evidence/04-docker-image.txt
+          curl --retry 10 --retry-delay 1 --retry-connrefused --fail http://localhost:8080/ -o /tmp/tax-calculator.html
+          grep -q 'Tax Calculator' /tmp/tax-calculator.html
+          curl --fail http://localhost:8080/taxCalculator.js -o /tmp/taxCalculator.js
+          grep -q 'calculateTax' /tmp/taxCalculator.js
+          printf '\nHTTP checks passed: index.html and taxCalculator.js served by the Docker container.\n' | tee -a evidence/04-docker-image.txt
+          printf 'Environment: GitHub Actions Ubuntu runner. These are actual Docker commands, not IBM Cloud deployment evidence.\n' > evidence/ENVIRONMENT.txt
+      - name: Upload actual command outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tax-calculator-verification
+          path: evidence/
+      - name: Stop verification container
+        if: always()
+        run: docker rm -f tax-calculator || true

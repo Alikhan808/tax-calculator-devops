@@ -1,0 +1,9 @@
+$ npx jasmine
+Randomized with seed 83176
+Started
+.......
+
+
+7 specs, 0 failures
+Finished in 0.003 seconds
+Randomized with seed 83176 (jasmine --random=true --seed=83176)

@@ -1,0 +1,98 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: clone
+spec:
+  params:
+    - name: url
+      type: string
+    - name: revision
+      type: string
+      default: main
+  workspaces:
+    - name: source
+  steps:
+    - name: clone
+      image: alpine/git:2.47.2
+      env:
+        - name: REPO_URL
+          value: $(params.url)
+        - name: REVISION
+          value: $(params.revision)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        git clone --depth 1 --branch "$REVISION" "$REPO_URL" repo
+        git -C repo rev-parse HEAD
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: npm
+spec:
+  description: Install the exact development dependencies from package-lock.json.
+  workspaces:
+    - name: source
+  steps:
+    - name: install
+      image: node:22-bookworm-slim
+      workingDir: $(workspaces.source.path)/repo
+      env:
+        - name: npm_config_cache
+          value: /tmp/npm-cache
+      script: |
+        #!/bin/sh
+        set -eu
+        npm ci --no-audit --no-fund
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: jasmine
+spec:
+  description: Run the seven IBM starter Jasmine specifications; fail on any failure.
+  workspaces:
+    - name: source
+  steps:
+    - name: tests
+      image: node:22-bookworm-slim
+      workingDir: $(workspaces.source.path)/repo
+      script: |
+        #!/bin/sh
+        set -eu
+        npx --no-install jasmine
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah
+spec:
+  description: Build the Nginx application and push it to the authenticated registry.
+  params:
+    - name: IMAGE
+      type: string
+  workspaces:
+    - name: source
+    - name: dockerconfig
+      readOnly: true
+  results:
+    - name: IMAGE_DIGEST
+      description: Digest returned by the registry after the successful push.
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:v1.40.0
+      workingDir: $(workspaces.source.path)/repo
+      securityContext:
+        privileged: true
+      env:
+        - name: IMAGE
+          value: $(params.IMAGE)
+        - name: REGISTRY_AUTH_FILE
+          value: $(workspaces.dockerconfig.path)/.dockerconfigjson
+      script: |
+        #!/bin/sh
+        set -eu
+        buildah --storage-driver=vfs bud --format=docker --tls-verify=true -t "$IMAGE" -f Dockerfile .
+        buildah --storage-driver=vfs push --tls-verify=true --digestfile /tmp/image-digest "$IMAGE" "docker://$IMAGE"
+        tr -d '\n' < /tmp/image-digest > "$(results.IMAGE_DIGEST.path)"
