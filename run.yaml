@@ -15,12 +15,8 @@ spec:
       value: tax-calculator
   workspaces:
     - name: pipeline-workspace
-      volumeClaimTemplate:
-        spec:
-          accessModes: [ReadWriteOnce]
-          resources:
-            requests:
-              storage: 1Gi
+      persistentVolumeClaim:
+        claimName: pipelinerun-pvc
     - name: dockerconfig-ws
       secret:
         secretName: docker-reg-creds

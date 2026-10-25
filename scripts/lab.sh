@@ -44,7 +44,7 @@ case "$mode" in
   pipeline)
     require_cloud
     kubectl get secret docker-reg-creds -n "$SN_ICR_NAMESPACE" >/dev/null
-    kubectl apply -f tasks.yaml -f pipeline.yaml -n "$SN_ICR_NAMESPACE"
+    kubectl apply -f pvc.yaml -f tasks.yaml -f pipeline.yaml -n "$SN_ICR_NAMESPACE"
     run_name="$(kubectl create -f run.yaml -n "$SN_ICR_NAMESPACE" -o jsonpath='{.metadata.name}')"
     printf '%s\n' "$run_name" > evidence/pipeline-run-name.txt
     tkn pipelinerun logs "$run_name" -n "$SN_ICR_NAMESPACE" -f 2>&1 | tee evidence/09-tekton-pipeline-output.txt
