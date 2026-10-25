@@ -24,12 +24,12 @@ spec:
         #!/bin/sh
         set -eu
         if [ -d repo/.git ]; then
-          git -C repo fetch --depth 1 origin "$REVISION"
-          git -C repo checkout --detach FETCH_HEAD
+          git -c safe.directory="$PWD/repo" -C repo fetch --depth 1 origin "$REVISION"
+          git -c safe.directory="$PWD/repo" -C repo checkout --detach FETCH_HEAD
         else
           git clone --depth 1 --branch "$REVISION" "$REPO_URL" repo
         fi
-        git -C repo rev-parse HEAD
+        git -c safe.directory="$PWD/repo" -C repo rev-parse HEAD
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
